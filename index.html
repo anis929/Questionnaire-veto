@@ -827,13 +827,14 @@
     // Envoi réel vers la destination configurée (FORM_ENDPOINT)
     btn.disabled = true;
     btn.textContent = 'Envoi en cours…';
+    // Google Apps Script requires no-cors mode (opaque response)
     fetch(FORM_ENDPOINT, {
       method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify(data)
     })
-    .then(function(r){
-      if(!r.ok) throw new Error('HTTP '+r.status);
+    .then(function(){
       showDone();
     })
     .catch(function(){
