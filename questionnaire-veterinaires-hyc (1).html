@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Questionnaire vétérinaires — Hack Your Care</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E1F33;
+    --turq:#3DDBB7;
+    --turq-dark:#1FB79A;
+    --bg:#F5F7F9;
+    --card:#FFFFFF;
+    --text:#0E1F33;
+    --muted:#5A6B7B;
+    --border:#E2E8EC;
+    --border-focus:#3DDBB7;
+    --error:#C0392B;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    background:var(--navy);
+    color:#fff;
+    padding:38px 24px 30px;
+    border-bottom:4px solid var(--turq);
+  }
+  .header-inner{max-width:760px;margin:0 auto;}
+  .brand{
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--turq);
+    margin:0 0 14px;
+  }
+  header h1{
+    font-size:26px;
+    font-weight:700;
+    margin:0 0 10px;
+    line-height:1.25;
+  }
+  header p{
+    margin:0;
+    color:#B9C6D2;
+    font-size:15px;
+    max-width:620px;
+  }
+  .est-time{
+    display:inline-block;
+    margin-top:16px;
+    font-size:13px;
+    color:#8FA1B2;
+    border:1px solid #26384C;
+    padding:5px 12px;
+    border-radius:100px;
+  }
+
+  /* ---------- Progress ---------- */
+  .progress-wrap{
+    position:sticky;top:0;z-index:20;
+    background:rgba(245,247,249,.94);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--border);
+    padding:12px 24px;
+  }
+  .progress-inner{
+    max-width:760px;margin:0 auto;
+    display:flex;align-items:center;gap:14px;
+  }
+  .progress-track{
+    flex:1;height:6px;background:var(--border);
+    border-radius:100px;overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--turq-dark),var(--turq));
+    transition:width .35s ease;
+  }
+  .progress-label{
+    font-size:13px;color:var(--muted);font-weight:500;
+    white-space:nowrap;min-width:150px;text-align:right;
+  }
+
+  /* ---------- Form ---------- */
+  main{max-width:760px;margin:0 auto;padding:28px 24px 80px;}
+  .section{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:26px 26px 22px;
+    margin-bottom:20px;
+  }
+  .section-head{
+    display:flex;align-items:baseline;gap:12px;
+    margin:0 0 4px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--border);
+  }
+  .section-num{
+    font-size:13px;font-weight:700;color:var(--turq-dark);
+    letter-spacing:.05em;flex-shrink:0;
+  }
+  .section-title{font-size:17px;font-weight:600;margin:0;}
+  .section-sub{font-size:13px;color:var(--muted);margin:2px 0 0;font-weight:400;}
+  .section-body{padding-top:18px;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px;}
+  .full{grid-column:1 / -1;}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:2px;}
+  label{font-size:14px;font-weight:500;color:var(--text);}
+  .req{color:var(--turq-dark);font-weight:700;margin-left:2px;}
+  .hint{font-size:12px;color:var(--muted);margin-top:-2px;}
+
+  input[type=text],input[type=email],input[type=tel],input[type=url],
+  input[type=number],select,textarea{
+    font-family:inherit;font-size:14px;color:var(--text);
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;background:#fff;
+    transition:border-color .15s,box-shadow .15s;
+    width:100%;
+  }
+  textarea{resize:vertical;min-height:70px;}
+  input:focus,select:focus,textarea:focus{
+    outline:none;
+    border-color:var(--border-focus);
+    box-shadow:0 0 0 3px rgba(61,219,183,.18);
+  }
+  input.invalid,select.invalid{border-color:var(--error);}
+
+  /* checkbox / radio groups */
+  .options{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;}
+  .opt{
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid var(--border);border-radius:8px;
+    padding:8px 12px;font-size:13.5px;cursor:pointer;
+    background:#fff;transition:all .12s;user-select:none;
+  }
+  .opt:hover{border-color:var(--turq);}
+  .opt input{accent-color:var(--turq-dark);width:15px;height:15px;cursor:pointer;margin:0;}
+  .opt.checked{background:rgba(61,219,183,.10);border-color:var(--turq-dark);}
+
+  .consent{
+    display:flex;gap:11px;align-items:flex-start;
+    padding:12px 14px;border:1px solid var(--border);
+    border-radius:8px;margin-bottom:10px;background:#FAFCFC;
+  }
+  .consent input{accent-color:var(--turq-dark);width:17px;height:17px;margin-top:1px;flex-shrink:0;cursor:pointer;}
+  .consent label{font-size:13.5px;color:var(--muted);font-weight:400;cursor:pointer;}
+  .consent label b{color:var(--text);font-weight:600;}
+
+  /* ---------- Footer / submit ---------- */
+  .actions{display:flex;flex-direction:column;gap:14px;margin-top:8px;}
+  button.submit{
+    font-family:inherit;font-size:15px;font-weight:600;
+    background:var(--navy);color:#fff;border:none;
+    padding:15px 24px;border-radius:8px;cursor:pointer;
+    transition:background .15s,transform .05s;
+  }
+  button.submit:hover{background:#16304C;}
+  button.submit:active{transform:translateY(1px);}
+  button.secondary{
+    font-family:inherit;font-size:13.5px;font-weight:500;
+    background:transparent;color:var(--muted);border:1px solid var(--border);
+    padding:11px 18px;border-radius:8px;cursor:pointer;
+  }
+  button.secondary:hover{border-color:var(--turq);color:var(--turq-dark);}
+
+  .form-error{
+    display:none;color:var(--error);font-size:13.5px;font-weight:500;
+    background:#FDECEA;border:1px solid #F5C6C0;border-radius:8px;
+    padding:11px 14px;
+  }
+  .form-error.show{display:block;}
+
+  /* ---------- Confirmation ---------- */
+  .done{display:none;text-align:center;padding:30px 10px;}
+  .done.show{display:block;}
+  .done .check{
+    width:56px;height:56px;border-radius:50%;
+    background:var(--turq);color:var(--navy);
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;margin:0 auto 18px;font-weight:700;
+  }
+  .done h2{margin:0 0 8px;font-size:20px;}
+  .done p{color:var(--muted);font-size:14.5px;max-width:440px;margin:0 auto 22px;}
+  .done .recap-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+  footer.legal{
+    max-width:760px;margin:0 auto;padding:0 24px 40px;
+    font-size:12px;color:var(--muted);text-align:center;
+  }
+
+  @media (max-width:600px){
+    .grid{grid-template-columns:1fr;}
+    header{padding:30px 20px 24px;}
+    header h1{font-size:22px;}
+    .progress-label{min-width:auto;}
+    .section{padding:20px 18px 18px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <p class="brand">hack your care · communauté santé animale</p>
+    <h1>Mettons votre expertise à jour</h1>
+    <p>Nous complétons notre annuaire de vétérinaires afin de vous solliciter uniquement sur les projets qui correspondent à votre profil et à vos disponibilités. Ces informations nous permettent de vous identifier rapidement quand une mission adaptée se présente.</p>
+    <span class="est-time">⏱ Environ 5 minutes · champs marqués <b style="color:var(--turq)">*</b> requis</span>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-label" id="progressLabel">Progression</span>
+  </div>
+</div>
+
+<main>
+<form id="vetForm" novalidate>
+
+  <!-- 1. Identité -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <div>
+        <h2 class="section-title">Identité & coordonnées</h2>
+        <p class="section-sub">Comment vous joindre et par quel canal.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="grid">
+        <div class="field">
+          <label for="civilite">Civilité</label>
+          <select id="civilite" name="civilite">
+            <option value="">—</option>
+            <option>Dr</option><option>M.</option><option>Mme</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="field"></div>
+        <div class="field">
+          <label for="prenom">Prénom <span class="req" data-req>*</span></label>
+          <input type="text" id="prenom" name="prenom" data-required autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label for="nom">Nom <span class="req" data-req>*</span></label>
+          <input type="text" id="nom" name="nom" data-required autocomplete="family-name">
+        </div>
+        <div class="field">
+          <label for="email">Email professionnel <span class="req" data-req>*</span></label>
+          <input type="email" id="email" name="email" data-required autocomplete="email" placeholder="prenom.nom@exemple.fr">
+        </div>
+        <div class="field">
+          <label for="telephone">Téléphone <span class="req" data-req>*</span></label>
+          <input type="tel" id="telephone" name="telephone" data-required autocomplete="tel" placeholder="06 XX XX XX XX">
+        </div>
+        <div class="field">
+          <label for="canal">Canal de contact préféré</label>
+          <select id="canal" name="canal">
+            <option value="">—</option>
+            <option>Email</option><option>Téléphone</option><option>SMS</option>
+            <option>WhatsApp</option><option>LinkedIn</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="linkedin">Profil LinkedIn</label>
+          <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/…">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Statut ordinal -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <div>
+        <h2 class="section-title">Statut & inscription ordinale</h2>
+        <p class="section-sub">Votre cadre d'exercice et votre identifiant professionnel.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="grid">
+        <div class="field full">
+          <label for="numOrdre">N° d'inscription à l'Ordre National des Vétérinaires <span class="req" data-req>*</span></label>
+          <input type="text" id="numOrdre" name="numOrdre" data-required placeholder="Ex. 12345">
+          <span class="hint">Identifiant unique nous permettant de vérifier votre inscription.</span>
+        </div>
+        <div class="field">
+          <label for="statut">Statut d'exercice <span class="req" data-req>*</span></label>
+          <select id="statut" name="statut" data-required>
+            <option value="">—</option>
+            <option>Libéral</option>
+            <option>Salarié</option>
+            <option>Mixte (libéral + salarié)</option>
+            <option>Interne / Résident</option>
+            <option>Enseignant-chercheur</option>
+            <option>Retraité en activité</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="siret">SIRET (si libéral / indépendant)</label>
+          <input type="text" id="siret" name="siret" placeholder="14 chiffres">
+          <span class="hint">Utile pour la contractualisation et la facturation des missions.</span>
+        </div>
+        <div class="field">
+          <label for="anneeDiplome">Année d'obtention du diplôme</label>
+          <input type="number" id="anneeDiplome" name="anneeDiplome" min="1960" max="2026" placeholder="AAAA">
+        </div>
+        <div class="field">
+          <label for="ecole">École vétérinaire d'origine</label>
+          <select id="ecole" name="ecole">
+            <option value="">—</option>
+            <option>ENVA — Alfort</option>
+            <option>VetAgro Sup — Lyon</option>
+            <option>Oniris — Nantes</option>
+            <option>ENVT — Toulouse</option>
+            <option>École hors France</option>
+            <option>Autre</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Lieu & mobilité -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <div>
+        <h2 class="section-title">Lieu d'exercice & mobilité</h2>
+        <p class="section-sub">Où vous exercez et jusqu'où vous pouvez vous déplacer.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="grid">
+        <div class="field">
+          <label for="ville">Ville d'exercice principale <span class="req" data-req>*</span></label>
+          <input type="text" id="ville" name="ville" data-required autocomplete="address-level2">
+        </div>
+        <div class="field">
+          <label for="cp">Code postal <span class="req" data-req>*</span></label>
+          <input type="text" id="cp" name="cp" data-required autocomplete="postal-code" placeholder="Ex. 35500">
+        </div>
+        <div class="field">
+          <label for="pays">Pays</label>
+          <input type="text" id="pays" name="pays" value="France" autocomplete="country-name">
+        </div>
+        <div class="field">
+          <label for="mobilite">Mobilité pour missions en présentiel</label>
+          <select id="mobilite" name="mobilite">
+            <option value="">—</option>
+            <option>Oui, sans restriction géographique</option>
+            <option>Oui, à l'échelle régionale</option>
+            <option>Ponctuellement</option>
+            <option>Non, distanciel uniquement</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Disponible pour des missions en distanciel / visio ?</label>
+          <div class="options" data-radio="distanciel">
+            <label class="opt"><input type="radio" name="distanciel" value="Oui"> Oui</label>
+            <label class="opt"><input type="radio" name="distanciel" value="Non"> Non</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Expertise -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <div>
+        <h2 class="section-title">Domaines d'expertise</h2>
+        <p class="section-sub">Trois niveaux : votre pratique, vos domaines d'intérêt, vos éventuels titres.</p>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- Niveau 1 -->
+      <div class="field full">
+        <label>Niveau 1 — Type de pratique principale <span class="req" data-req>*</span></label>
+        <span class="hint">Plusieurs choix possibles.</span>
+        <div class="options" data-checkgroup="pratique" data-min="1" style="margin-top:6px;">
+          <label class="opt"><input type="checkbox" name="pratique" value="Canine"> Canine</label>
+          <label class="opt"><input type="checkbox" name="pratique" value="Rurale"> Rurale</label>
+          <label class="opt"><input type="checkbox" name="pratique" value="Équine"> Équine</label>
+          <label class="opt"><input type="checkbox" name="pratique" value="Nouveaux Animaux de Compagnie"> Nouveaux Animaux de Compagnie</label>
+          <label class="opt"><input type="checkbox" name="pratique" value="Autres (administration / industrie pharmaceutique / R&D / expertise)"> Autres (administration / industrie / R&D / expertise)</label>
+        </div>
+      </div>
+
+      <!-- Niveau 2 -->
+      <div class="field full" style="margin-top:22px;">
+        <label>Niveau 2 — Domaines d'intérêt <span class="req" data-req>*</span></label>
+        <span class="hint">Plusieurs choix possibles.</span>
+        <div class="options" data-checkgroup="domaines" data-min="1" style="margin-top:6px;">
+          <label class="opt"><input type="checkbox" name="domaines" value="Anatomie Pathologique"> Anatomie Pathologique</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Anesthésiologie / Analgésie"> Anesthésiologie / Analgésie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Bien-être animal"> Bien-être animal</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Biologie clinique"> Biologie clinique</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Biothérapie"> Biothérapie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Cardiologie"> Cardiologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Chirurgie"> Chirurgie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Comportement"> Comportement</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Dentisterie-Stomatologie"> Dentisterie-Stomatologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Dermatologie"> Dermatologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Endocrinologie"> Endocrinologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Gastro-Entérologie"> Gastro-Entérologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Génétique"> Génétique</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Imagerie Médicale"> Imagerie Médicale</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Immunologie"> Immunologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Maladies virales et bactériennes"> Maladies virales et bactériennes</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Management"> Management</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Médecine Féline"> Médecine Féline</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Médecine Interne"> Médecine Interne</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Médecine préventive"> Médecine préventive</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="N.A.C (Nouveaux Animaux de Compagnie)"> N.A.C</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Neurologie"> Neurologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Nutrition, Alimentation et Diététique"> Nutrition, Alimentation et Diététique</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Numérique en santé animale"> Numérique en santé animale</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Oncologie"> Oncologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Ophtalmologie"> Ophtalmologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Orthopédie"> Orthopédie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Ostéopathie et Acupuncture"> Ostéopathie et Acupuncture</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Otologie"> Otologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Parasitologie"> Parasitologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Pédiatrie"> Pédiatrie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Personnel Soignant"> Personnel Soignant</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Pharmacologie"> Pharmacologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Physiothérapie / Rééducation"> Physiothérapie / Rééducation</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Pneumologie"> Pneumologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Reproduction-Élevage"> Reproduction-Élevage</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Thérapeutique / Médicament"> Thérapeutique / Médicament</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Toxicologie"> Toxicologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Traumatologie"> Traumatologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Urgence et Réanimation"> Urgence et Réanimation</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Uro-Néphrologie"> Uro-Néphrologie</label>
+          <label class="opt"><input type="checkbox" name="domaines" value="Autres"> Autres</label>
+        </div>
+      </div>
+
+      <!-- Niveau 3 -->
+      <div class="field full" style="margin-top:22px;">
+        <label>Niveau 3 — Diplômes complémentaires & titre de spécialiste</label>
+        <span class="hint">Optionnel. En France, le titre de vétérinaire spécialiste suppose un DESV ou un diplôme de collège européen reconnu par le CNSV. Liste officielle des titres et diplômes : veterinaire.fr (référence fournie par HYC).</span>
+      </div>
+      <div class="grid" style="margin-top:10px;">
+        <div class="field">
+          <label for="desv">Titre de spécialiste — DESV</label>
+          <select id="desv" name="desv">
+            <option value="">— Aucun</option>
+            <option>Anatomie pathologique vétérinaire</option>
+            <option>Médecine interne des animaux de compagnie et cardiologie</option>
+            <option>Chirurgie des animaux de compagnie</option>
+            <option>Médecine d'élevage et pathologie des équidés</option>
+            <option>Ophtalmologie vétérinaire</option>
+            <option>Gestion de la santé des bovins</option>
+            <option>Sciences de l'animal de laboratoire</option>
+            <option>Dermatologie</option>
+            <option>Gestion de la santé et des productions animales en régions chaudes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="college">Titre de spécialiste — diplôme de collège européen (reconnu CNSV)</label>
+          <select id="college" name="college">
+            <option value="">— Aucun</option>
+            <option>Cardiologie des animaux de compagnie</option>
+            <option>Chirurgie des petits animaux</option>
+            <option>Chirurgie équine</option>
+            <option>Dentisterie-stomatologie</option>
+            <option>Dermatologie</option>
+            <option>Imagerie médicale</option>
+            <option>Médecine interne des animaux de compagnie</option>
+            <option>Médecine interne des équidés</option>
+            <option>Ophtalmologie vétérinaire</option>
+            <option>Santé publique vétérinaire, médecine des populations</option>
+            <option>Santé publique vétérinaire, sciences des aliments</option>
+            <option>Pathologie clinique</option>
+            <option>Reproduction</option>
+            <option>Médecine du comportement des animaux de compagnie</option>
+            <option>Sciences de l'animal de laboratoire</option>
+            <option>Santé porcine</option>
+            <option>Nutrition clinique vétérinaire</option>
+            <option>Neurologie</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="ceav">Autre diplôme — CEAV (Certificat d'Études Approfondies Vétérinaires)</label>
+          <select id="ceav" name="ceav">
+            <option value="">— Aucun</option>
+            <option>Chirurgie des animaux de compagnie</option>
+            <option>Éthologie clinique et appliquée des animaux domestiques</option>
+            <option>Gestion de la santé et de la qualité en production avicole</option>
+            <option>Gestion de la santé et de la qualité en production porcine</option>
+            <option>Gestion de la santé et de la qualité en production laitière</option>
+            <option>Gestion de la sécurité et de la qualité des denrées alimentaires</option>
+            <option>Hygiène et technologie alimentaire</option>
+            <option>Médecine du comportement des animaux domestiques</option>
+            <option>Médecine interne des animaux de compagnie</option>
+            <option>Médecine et chirurgie des équidés</option>
+            <option>Pathologie animale en régions chaudes</option>
+            <option>Santé publique vétérinaire</option>
+            <option>Sciences et médecine des animaux de laboratoire</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Compétences transversales -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <div>
+        <h2 class="section-title">Compétences transversales & langues</h2>
+        <p class="section-sub">Au-delà du soin — ce qui élargit les missions envisageables.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="field full">
+        <label>Langues de travail</label>
+        <div class="options" data-checkgroup="langues">
+          <label class="opt"><input type="checkbox" name="langues" value="Français"> Français</label>
+          <label class="opt"><input type="checkbox" name="langues" value="Anglais"> Anglais</label>
+          <label class="opt"><input type="checkbox" name="langues" value="Italien"> Italien</label>
+          <label class="opt"><input type="checkbox" name="langues" value="Espagnol"> Espagnol</label>
+          <label class="opt"><input type="checkbox" name="langues" value="Allemand"> Allemand</label>
+          <label class="opt"><input type="checkbox" name="langues" value="Autre"> Autre</label>
+        </div>
+      </div>
+      <div class="field full" style="margin-top:18px;">
+        <label>Compétences transversales</label>
+        <div class="options" data-checkgroup="competences">
+          <label class="opt"><input type="checkbox" name="competences" value="Rédaction scientifique"> Rédaction scientifique</label>
+          <label class="opt"><input type="checkbox" name="competences" value="Formation / pédagogie"> Formation / pédagogie</label>
+          <label class="opt"><input type="checkbox" name="competences" value="Prise de parole (webinaire / conférence)"> Prise de parole</label>
+          <label class="opt"><input type="checkbox" name="competences" value="Expertise réglementaire"> Expertise réglementaire</label>
+          <label class="opt"><input type="checkbox" name="competences" value="Méthodologie de recherche clinique"> Recherche clinique</label>
+          <label class="opt"><input type="checkbox" name="competences" value="Revue de littérature"> Revue de littérature</label>
+          <label class="opt"><input type="checkbox" name="competences" value="Outils numériques / IA"> Outils numériques / IA</label>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:18px;">
+        <div class="field full">
+          <label for="ia">Appétence pour l'IA et le numérique en santé animale</label>
+          <select id="ia" name="ia">
+            <option value="">—</option>
+            <option>Très intéressé(e) — je souhaite être sollicité(e) sur ces sujets</option>
+            <option>Intéressé(e)</option>
+            <option>Neutre / curieux(se)</option>
+            <option>Peu intéressé(e)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Missions -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <div>
+        <h2 class="section-title">Missions & disponibilité</h2>
+        <p class="section-sub">Sur quoi, et à quelle fréquence, souhaitez-vous être mobilisé.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="field full">
+        <label>Types de missions qui vous intéressent</label>
+        <span class="hint">Plusieurs choix possibles. Exemples de missions réelles proposées via HYC.</span>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+
+          <label class="consent" style="cursor:pointer;">
+            <input type="checkbox" name="missions" value="Rédaction / création de contenus">
+            <span><b style="color:var(--text)">Rédaction & création de contenus</b><br>
+            Rédiger des fiches, articles ou supports d'information, pour le grand public ou les professionnels.</span>
+          </label>
+
+          <label class="consent" style="cursor:pointer;">
+            <input type="checkbox" name="missions" value="Focus groups / recueil d'avis">
+            <span><b style="color:var(--text)">Focus groups & recueil d'avis</b><br>
+            Participer à des réunions d'experts pour donner votre avis sur des produits ou de futurs traitements.</span>
+          </label>
+
+          <label class="consent" style="cursor:pointer;">
+            <input type="checkbox" name="missions" value="Interventions média (radio, TV, presse)">
+            <span><b style="color:var(--text)">Interventions média</b><br>
+            Intervenir ponctuellement en radio, TV ou presse sur des sujets de santé animale.</span>
+          </label>
+
+          <label class="consent" style="cursor:pointer;">
+            <input type="checkbox" name="missions" value="Comité scientifique / conseil">
+            <span><b style="color:var(--text)">Comité scientifique & conseil</b><br>
+            Siéger comme conseiller(ère) au comité scientifique d'une entreprise (ex. start-up de e-santé animale).</span>
+          </label>
+
+          <label class="consent" style="cursor:pointer;">
+            <input type="checkbox" name="missions" value="Formation / enseignement">
+            <span><b style="color:var(--text)">Formation & enseignement</b><br>
+            Animer des cours ou formations (étudiants, ASV, formation continue), en présentiel ou en distanciel.</span>
+          </label>
+
+          <label class="consent" style="cursor:pointer;">
+            <input type="checkbox" name="missions" value="Test / validation de solutions">
+            <span><b style="color:var(--text)">Test & validation de solutions</b><br>
+            Tester ou valider cliniquement des outils et logiciels de santé animale.</span>
+          </label>
+
+        </div>
+      </div>
+      <div class="grid" style="margin-top:18px;">
+        <div class="field">
+          <label for="tempsDispo">Temps mobilisable par mois</label>
+          <select id="tempsDispo" name="tempsDispo">
+            <option value="">—</option>
+            <option>Moins de 2h</option>
+            <option>2 à 5h</option>
+            <option>5 à 10h</option>
+            <option>Plus de 10h</option>
+            <option>Variable selon les périodes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="facturation">Pouvez-vous facturer des prestations ?</label>
+          <select id="facturation" name="facturation">
+            <option value="">—</option>
+            <option>Oui</option>
+            <option>Non</option>
+            <option>À voir selon la mission</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Consentement -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">07</span>
+      <div>
+        <h2 class="section-title">Consentement</h2>
+        <p class="section-sub">Traitement de vos données (RGPD).</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="field full" style="margin-bottom:16px;">
+        <label for="nomPublic">Souhaitez-vous que votre nom apparaisse publiquement lorsque vous êtes associé(e) à une mission ? <span class="req" data-req>*</span></label>
+        <select id="nomPublic" name="nomPublic" data-required>
+          <option value="">—</option>
+          <option>Oui, mon nom peut apparaître publiquement</option>
+          <option>Non, je préfère rester anonyme</option>
+          <option>Au cas par cas, selon la mission</option>
+        </select>
+      </div>
+      <div class="consent">
+        <input type="checkbox" id="rgpd" name="rgpd" data-required>
+        <label for="rgpd"><b>J'autorise Hack Your Care à traiter et conserver ces informations</b> dans le cadre de la gestion de sa communauté de professionnels de santé. <span class="req" data-req>*</span></label>
+      </div>
+      <div class="consent">
+        <input type="checkbox" id="consentMissions" name="consentMissions">
+        <label for="consentMissions"><b>J'accepte d'être contacté(e)</b> pour des propositions de missions correspondant à mon profil.</label>
+      </div>
+      <div class="consent">
+        <input type="checkbox" id="consentAnnuaire" name="consentAnnuaire">
+        <label for="consentAnnuaire"><b>J'accepte de figurer dans l'annuaire d'experts</b> de Hack Your Care, présenté à ses clients et partenaires.</label>
+      </div>
+
+      <div class="actions" style="margin-top:20px;">
+        <div class="form-error" id="formError">Merci de compléter les champs obligatoires signalés avant de valider.</div>
+        <button type="submit" class="submit">Envoyer mes informations</button>
+      </div>
+    </div>
+  </section>
+
+</form>
+
+<!-- Confirmation -->
+<div class="done" id="doneMsg">
+  <div class="check">✓</div>
+  <h2>Merci, vos informations sont enregistrées.</h2>
+  <p>Votre profil est à jour dans notre annuaire. Nous reviendrons vers vous dès qu'une mission correspond à votre expertise et à vos disponibilités.</p>
+  <div class="recap-actions">
+    <button class="secondary" id="downloadBtn">Télécharger un récapitulatif</button>
+  </div>
+</div>
+
+</main>
+
+<footer class="legal">
+  Hack Your Care — plateforme de mise en relation de professionnels de santé.<br>
+  Vos données sont traitées conformément au RGPD. Vous pouvez demander leur rectification ou leur suppression à tout moment.
+</footer>
+
+<script>
+(function(){
+
+  /* =================================================================
+     CONFIGURATION HYC — une seule ligne à remplir pour collecter
+     les réponses. Collez ici l'URL de destination :
+       • back-end no-code (Formspree, Getform, Web3Forms…)
+       • Google Apps Script (Web App)
+       • votre API HYC (ex. https://api.hackyourcare.fr/veterinaires)
+     Laissée vide → le formulaire fonctionne en mode démo
+     (le vétérinaire télécharge son récapitulatif, rien n'est envoyé).
+  ================================================================= */
+  const FORM_ENDPOINT = '';
+
+  const form = document.getElementById('vetForm');
+  const fill = document.getElementById('progressFill');
+  const label = document.getElementById('progressLabel');
+  const formError = document.getElementById('formError');
+  const doneMsg = document.getElementById('doneMsg');
+  let lastData = null;
+
+  // required inputs (text/select) + required checkgroups + required radios + rgpd
+  const requiredFields = Array.from(form.querySelectorAll('[data-required]'));
+  const requiredGroups = Array.from(form.querySelectorAll('[data-checkgroup][data-min]'));
+  const totalRequired = requiredFields.length + requiredGroups.length;
+
+  // visual state for opt chips
+  form.querySelectorAll('.opt input').forEach(inp=>{
+    const sync = ()=> inp.closest('.opt').classList.toggle('checked', inp.checked);
+    inp.addEventListener('change', ()=>{
+      if(inp.type==='radio'){
+        form.querySelectorAll('input[name="'+inp.name+'"]').forEach(r=>r.closest('.opt').classList.remove('checked'));
+      }
+      sync(); updateProgress();
+    });
+  });
+
+  function groupFilled(group){
+    const min = parseInt(group.dataset.min||'1',10);
+    return group.querySelectorAll('input:checked').length >= min;
+  }
+  function fieldFilled(f){
+    return String(f.value||'').trim() !== '';
+  }
+
+  function updateProgress(){
+    let done = 0;
+    requiredFields.forEach(f=>{ if(f.type==='checkbox'? f.checked : fieldFilled(f)) done++; });
+    requiredGroups.forEach(g=>{ if(groupFilled(g)) done++; });
+    const pct = Math.round(done/totalRequired*100);
+    fill.style.width = pct + '%';
+    label.textContent = done + ' / ' + totalRequired + ' champs requis';
+  }
+
+  form.addEventListener('input', updateProgress);
+  updateProgress();
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    let ok = true;
+
+    requiredFields.forEach(f=>{
+      const valid = f.type==='checkbox' ? f.checked : fieldFilled(f);
+      f.classList.toggle('invalid', !valid);
+      if(!valid) ok = false;
+    });
+    // email format
+    const email = form.email;
+    if(email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){
+      email.classList.add('invalid'); ok = false;
+    }
+    requiredGroups.forEach(g=>{
+      const valid = groupFilled(g);
+      g.style.outline = valid ? 'none' : '';
+      if(!valid) ok = false;
+    });
+
+    if(!ok){
+      formError.classList.add('show');
+      const firstBad = form.querySelector('.invalid, [data-checkgroup].bad');
+      if(firstBad) firstBad.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+    formError.classList.remove('show');
+
+    // Collect data
+    const data = {};
+    const fd = new FormData(form);
+    for(const [k,v] of fd.entries()){
+      if(data[k]!==undefined){ data[k] = [].concat(data[k], v); }
+      else { data[k] = v; }
+    }
+    data._horodatage = new Date().toISOString();
+    lastData = data;
+
+    const btn = form.querySelector('button.submit');
+
+    function showDone(){
+      form.style.display = 'none';
+      doneMsg.classList.add('show');
+      doneMsg.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
+    // Aucune destination configurée → mode démo (téléchargement local)
+    if(!FORM_ENDPOINT){
+      showDone();
+      return;
+    }
+
+    // Envoi réel vers la destination configurée (FORM_ENDPOINT)
+    btn.disabled = true;
+    btn.textContent = 'Envoi en cours…';
+    fetch(FORM_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify(data)
+    })
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      showDone();
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.textContent = 'Envoyer mes informations';
+      formError.textContent = "L'envoi a échoué. Vérifiez votre connexion et réessayez.";
+      formError.classList.add('show');
+    });
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', function(){
+    if(!lastData) return;
+    const blob = new Blob([JSON.stringify(lastData,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'profil-veterinaire-hyc.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+})();
+</script>
+</body>
+</html>
