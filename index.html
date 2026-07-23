@@ -224,7 +224,7 @@
 <header>
   <div class="header-inner">
     <p class="brand">hack your care · communauté santé animale</p>
-    <h1>Mettons votre expertise à jour</h1>
+    <h1>Créez ou actualisez votre profil d'expertise</h1>
     <p>Nous complétons notre annuaire de vétérinaires afin de vous solliciter uniquement sur les projets qui correspondent à votre profil et à vos disponibilités. Ces informations nous permettent de vous identifier rapidement quand une mission adaptée se présente.</p>
     <span class="est-time">⏱ Environ 5 minutes · champs marqués <b style="color:var(--turq)">*</b> requis</span>
   </div>
@@ -719,15 +719,22 @@
 (function(){
 
   /* =================================================================
-     CONFIGURATION HYC — une seule ligne à remplir pour collecter
-     les réponses. Collez ici l'URL de destination :
-       • back-end no-code (Formspree, Getform, Web3Forms…)
+     CONFIGURATION HYC — URL de destination pour les réponses
        • Google Apps Script (Web App)
-       • votre API HYC (ex. https://api.hackyourcare.fr/veterinaires)
+       • Votre API HYC (ex. https://api.hackyourcare.fr/veterinaires)
      Laissée vide → le formulaire fonctionne en mode démo
      (le vétérinaire télécharge son récapitulatif, rien n'est envoyé).
   ================================================================= */
   const FORM_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzZ-HGuSGtU0B4p5dEVObAxI864IbiLBSZ9SRIggaDIj8ceYjQVtoZfvR9aLFhoAZU/exec';
+
+  /* =================================================================
+     CONFIGURATION SLACK — Webhook pour le canal "nouveau-pds-veto"
+     Collez ici l'URL de webhook Slack si vous souhaitez recevoir
+     les réponses dans Slack.
+     Format: https://hooks.slack.com/services/T00000000/B00000000/XXXX...
+     Laissée vide → pas d'envoi à Slack.
+  ================================================================= */
+  const SLACK_WEBHOOK_URL = '';
 
   const form = document.getElementById('vetForm');
   const fill = document.getElementById('progressFill');
@@ -824,25 +831,77 @@
       return;
     }
 
-    // Envoi réel vers la destination configurée (FORM_ENDPOINT)
+    // Envoi réel vers la destination configurée
     btn.disabled = true;
     btn.textContent = 'Envoi en cours…';
-    // Google Apps Script requires no-cors mode (opaque response)
-    fetch(FORM_ENDPOINT, {
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(data)
-    })
-    .then(function(){
-      showDone();
-    })
-    .catch(function(){
-      btn.disabled = false;
-      btn.textContent = 'Envoyer mes informations';
-      formError.textContent = "L'envoi a échoué. Vérifiez votre connexion et réessayez.";
-      formError.classList.add('show');
-    });
+
+    const promises = [];
+
+    // Envoi vers le Google Apps Script
+    if(FORM_ENDPOINT){
+      promises.push(
+        fetch(FORM_ENDPOINT, {
+          method:'POST',
+          mode:'no-cors',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(data)
+        })
+      );
+    }
+
+    // Envoi vers Slack si webhook configuré
+    if(SLACK_WEBHOOK_URL){
+      const slackMessage = {
+        text: '📋 Nouveau profil d\'expertise vétérinaire reçu',
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*Nouveau profil d\'expertise reçu*\n*${data.prenom} ${data.nom}* (${data.email})`
+            }
+          },
+          {
+            type: 'section',
+            fields: [
+              { type: 'mrkdwn', text: `*Téléphone:*\n${data.telephone || '—'}` },
+              { type: 'mrkdwn', text: `*Ville:*\n${data.ville || '—'}` },
+              { type: 'mrkdwn', text: `*Pratique:*\n${Array.isArray(data.pratique) ? data.pratique.join(', ') : data.pratique || '—'}` },
+              { type: 'mrkdwn', text: `*Statut:*\n${data.statut || '—'}` }
+            ]
+          },
+          {
+            type: 'divider'
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `_Envoyé le ${new Date(data._horodatage).toLocaleString('fr-FR')}_`
+            }
+          }
+        ]
+      };
+
+      promises.push(
+        fetch(SLACK_WEBHOOK_URL, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(slackMessage)
+        })
+      );
+    }
+
+    Promise.all(promises)
+      .then(function(){
+        showDone();
+      })
+      .catch(function(){
+        btn.disabled = false;
+        btn.textContent = 'Envoyer mes informations';
+        formError.textContent = "L'envoi a échoué. Vérifiez votre connexion et réessayez.";
+        formError.classList.add('show');
+      });
   });
 
   document.getElementById('downloadBtn').addEventListener('click', function(){
