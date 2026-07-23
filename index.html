@@ -725,7 +725,14 @@
   const params = new URLSearchParams(window.location.search);
   const FORM_ENDPOINT = window.CONFIG?.FORM_ENDPOINT || params.get('form_endpoint') || '';
   const SLACK_WEBHOOK_URL = window.CONFIG?.SLACK_WEBHOOK_URL || params.get('slack_webhook') || '';
-  console.log('Configuration chargée:', { FORM_ENDPOINT: !!FORM_ENDPOINT, SLACK_WEBHOOK_URL: !!SLACK_WEBHOOK_URL });
+
+  console.log('=== CONFIGURATION QUESTIONNAIRE ===');
+  console.log('window.CONFIG existe?', !!window.CONFIG);
+  console.log('window.CONFIG.SLACK_WEBHOOK_URL:', window.CONFIG?.SLACK_WEBHOOK_URL ? '✅ oui' : '❌ non');
+  console.log('Query param slack_webhook:', params.get('slack_webhook') ? '✅ oui' : '❌ non');
+  console.log('SLACK_WEBHOOK_URL final:', SLACK_WEBHOOK_URL ? '✅ configuré' : '❌ VIDE');
+  console.log('Location search:', window.location.search);
+  console.log('==================================');
 
   const form = document.getElementById('vetForm');
   const fill = document.getElementById('progressFill');
