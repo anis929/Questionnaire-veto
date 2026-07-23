@@ -723,6 +723,7 @@
   // Valeurs par défaut si config.js n'est pas présent
   const FORM_ENDPOINT = window.CONFIG?.FORM_ENDPOINT || '';
   const SLACK_WEBHOOK_URL = window.CONFIG?.SLACK_WEBHOOK_URL || '';
+  console.log('Configuration chargée:', { FORM_ENDPOINT: !!FORM_ENDPOINT, SLACK_WEBHOOK_URL: !!SLACK_WEBHOOK_URL });
 
   const form = document.getElementById('vetForm');
   const fill = document.getElementById('progressFill');
@@ -839,6 +840,7 @@
 
     // Envoi vers Slack si webhook configuré
     if(SLACK_WEBHOOK_URL){
+      console.log('Envoi à Slack...');
       const slackMessage = {
         text: '📋 Nouveau profil d\'expertise vétérinaire reçu',
         blocks: [
@@ -876,6 +878,14 @@
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify(slackMessage)
+        })
+        .then(resp => {
+          console.log('Réponse Slack:', resp.status);
+          return resp;
+        })
+        .catch(err => {
+          console.error('Erreur Slack:', err);
+          throw err;
         })
       );
     }
