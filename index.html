@@ -721,8 +721,10 @@
 (function(){
 
   // Valeurs par défaut si config.js n'est pas présent
-  const FORM_ENDPOINT = window.CONFIG?.FORM_ENDPOINT || '';
-  const SLACK_WEBHOOK_URL = window.CONFIG?.SLACK_WEBHOOK_URL || '';
+  // Peut aussi être surchargé par query params : ?slack_webhook=...
+  const params = new URLSearchParams(window.location.search);
+  const FORM_ENDPOINT = window.CONFIG?.FORM_ENDPOINT || params.get('form_endpoint') || '';
+  const SLACK_WEBHOOK_URL = window.CONFIG?.SLACK_WEBHOOK_URL || params.get('slack_webhook') || '';
   console.log('Configuration chargée:', { FORM_ENDPOINT: !!FORM_ENDPOINT, SLACK_WEBHOOK_URL: !!SLACK_WEBHOOK_URL });
 
   const form = document.getElementById('vetForm');
