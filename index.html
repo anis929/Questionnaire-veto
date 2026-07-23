@@ -720,19 +720,11 @@
 <script>
 (function(){
 
-  // Valeurs par défaut si config.js n'est pas présent
-  // Peut aussi être surchargé par query params : ?slack_webhook=...
+  // Configuration du formulaire
+  // SLACK_WEBHOOK_URL n'est plus utilisé (envoi via /api/send-to-slack)
   const params = new URLSearchParams(window.location.search);
   const FORM_ENDPOINT = window.CONFIG?.FORM_ENDPOINT || params.get('form_endpoint') || '';
-  const SLACK_WEBHOOK_URL = window.CONFIG?.SLACK_WEBHOOK_URL || params.get('slack_webhook') || '';
-
-  console.log('=== CONFIGURATION QUESTIONNAIRE ===');
-  console.log('window.CONFIG existe?', !!window.CONFIG);
-  console.log('window.CONFIG.SLACK_WEBHOOK_URL:', window.CONFIG?.SLACK_WEBHOOK_URL ? '✅ oui' : '❌ non');
-  console.log('Query param slack_webhook:', params.get('slack_webhook') ? '✅ oui' : '❌ non');
-  console.log('SLACK_WEBHOOK_URL final:', SLACK_WEBHOOK_URL ? '✅ configuré' : '❌ VIDE');
-  console.log('Location search:', window.location.search);
-  console.log('==================================');
+  console.log('✅ Questionnaire chargé - Envoi Slack via API Vercel');
 
   const form = document.getElementById('vetForm');
   const fill = document.getElementById('progressFill');
@@ -847,51 +839,41 @@
       );
     }
 
-    // Envoi vers Slack si webhook configuré
-    if(SLACK_WEBHOOK_URL){
-      console.log('Envoi à Slack...', SLACK_WEBHOOK_URL);
-
-      const pratique = Array.isArray(data.pratique) ? data.pratique.join(', ') : (data.pratique || '—');
-      const domaines = Array.isArray(data.domaines) ? data.domaines.join(', ') : (data.domaines || '—');
-
-      // Message texte simple pour éviter les problèmes de format
-      const slackMessage = {
-        text: `📋 *Nouveau profil d'expertise vétérinaire reçu*\n\n` +
-              `👤 *${data.prenom} ${data.nom}*\n` +
-              `📧 ${data.email}\n` +
-              `📱 ${data.telephone || 'N/A'}\n` +
-              `📍 ${data.ville || '—'} (${data.cp || '—'})\n` +
-              `💼 Statut: ${data.statut || '—'}\n` +
-              `🐾 Pratique: ${pratique}\n` +
-              `🔬 Domaines: ${domaines}\n` +
-              `🚗 Mobilité: ${data.mobilite || '—'}`
-      };
-
-      console.log('Message Slack:', JSON.stringify(slackMessage, null, 2));
-
-      promises.push(
-        fetch(SLACK_WEBHOOK_URL, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(slackMessage)
+    // Envoi à Slack via API Vercel (plus robuste que direct)
+    console.log('Envoi à Slack via /api/send-to-slack...');
+    promises.push(
+      fetch('/api/send-to-slack', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          prenom: data.prenom,
+          nom: data.nom,
+          email: data.email,
+          telephone: data.telephone,
+          ville: data.ville,
+          cp: data.cp,
+          statut: data.statut,
+          pratique: data.pratique,
+          domaines: data.domaines,
+          mobilite: data.mobilite
         })
-        .then(resp => {
-          console.log('✅ Réponse Slack:', resp.status, resp.statusText);
-          if(!resp.ok) {
-            return resp.text().then(text => {
-              console.error('Erreur Slack (texte):', text);
-              throw new Error(`Slack error: ${resp.status} ${text}`);
-            });
-          }
-          return resp;
-        })
-        .catch(err => {
-          console.error('❌ Erreur Slack:', err);
-          // Slack est optionnel - ne pas bloquer le formulaire si Slack échoue
-          console.warn('⚠️ Slack n\'a pas reçu les données, mais le formulaire est validé');
-        })
-      );
-    }
+      })
+      .then(resp => {
+        console.log('✅ Réponse API Slack:', resp.status);
+        return resp.json();
+      })
+      .then(json => {
+        if(json.success) {
+          console.log('✅ Message envoyé à Slack !');
+        } else {
+          console.error('❌ Erreur Slack:', json.error);
+        }
+      })
+      .catch(err => {
+        console.error('❌ Erreur envoi Slack:', err);
+        console.warn('⚠️ Slack n\'a pas reçu les données, mais le formulaire est validé');
+      })
+    );
 
     Promise.all(promises)
       .then(function(){
