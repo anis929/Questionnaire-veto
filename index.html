@@ -221,6 +221,8 @@
 </head>
 <body>
 
+<script src="config.js"></script>
+
 <header>
   <div class="header-inner">
     <p class="brand">hack your care · communauté santé animale</p>
@@ -718,23 +720,9 @@
 <script>
 (function(){
 
-  /* =================================================================
-     CONFIGURATION HYC — URL de destination pour les réponses
-       • Google Apps Script (Web App)
-       • Votre API HYC (ex. https://api.hackyourcare.fr/veterinaires)
-     Laissée vide → le formulaire fonctionne en mode démo
-     (le vétérinaire télécharge son récapitulatif, rien n'est envoyé).
-  ================================================================= */
-  const FORM_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzZ-HGuSGtU0B4p5dEVObAxI864IbiLBSZ9SRIggaDIj8ceYjQVtoZfvR9aLFhoAZU/exec';
-
-  /* =================================================================
-     CONFIGURATION SLACK — Webhook pour le canal "nouveau-pds-veto"
-     Collez ici l'URL de webhook Slack si vous souhaitez recevoir
-     les réponses dans Slack.
-     Format: https://hooks.slack.com/services/T00000000/B00000000/XXXX...
-     Laissée vide → pas d'envoi à Slack.
-  ================================================================= */
-  const SLACK_WEBHOOK_URL = '';
+  // Valeurs par défaut si config.js n'est pas présent
+  const FORM_ENDPOINT = window.CONFIG?.FORM_ENDPOINT || '';
+  const SLACK_WEBHOOK_URL = window.CONFIG?.SLACK_WEBHOOK_URL || '';
 
   const form = document.getElementById('vetForm');
   const fill = document.getElementById('progressFill');

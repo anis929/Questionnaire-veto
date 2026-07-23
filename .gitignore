@@ -1,0 +1,9 @@
+# Configuration avec données sensibles (URLs, clés, webhooks)
+config.js
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
