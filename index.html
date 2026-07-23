@@ -815,20 +815,14 @@
       doneMsg.scrollIntoView({behavior:'smooth',block:'start'});
     }
 
-    // Aucune destination configurée → mode démo (téléchargement local)
-    if(!FORM_ENDPOINT){
-      showDone();
-      return;
-    }
-
-    // Envoi réel vers la destination configurée
     btn.disabled = true;
     btn.textContent = 'Envoi en cours…';
 
     const promises = [];
 
-    // Envoi vers le Google Apps Script
+    // Envoi vers le Google Apps Script (optionnel)
     if(FORM_ENDPOINT){
+      console.log('📤 Envoi au Google Apps Script...');
       promises.push(
         fetch(FORM_ENDPOINT, {
           method:'POST',
@@ -839,8 +833,8 @@
       );
     }
 
-    // Envoi à Slack via API Vercel (plus robuste que direct)
-    console.log('Envoi à Slack via /api/send-to-slack...');
+    // Envoi à Slack via API Vercel (toujours exécuté)
+    console.log('🚀 Envoi à Slack via /api/send-to-slack...');
     promises.push(
       fetch('/api/send-to-slack', {
         method:'POST',
