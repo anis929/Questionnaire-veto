@@ -845,33 +845,17 @@
       const pratique = Array.isArray(data.pratique) ? data.pratique.join(', ') : (data.pratique || '—');
       const domaines = Array.isArray(data.domaines) ? data.domaines.join(', ') : (data.domaines || '—');
 
+      // Message texte simple pour éviter les problèmes de format
       const slackMessage = {
-        text: `📋 Nouveau profil d'expertise : ${data.prenom} ${data.nom}`,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*Nouveau profil d'expertise vétérinaire*\n\n*${data.prenom} ${data.nom}*\n${data.email} | ${data.telephone || 'N/A'}`
-            }
-          },
-          {
-            type: 'section',
-            fields: [
-              { type: 'mrkdwn', text: `*Ville:*\n${data.ville || '—'}` },
-              { type: 'mrkdwn', text: `*Statut:*\n${data.statut || '—'}` },
-              { type: 'mrkdwn', text: `*Pratique:*\n${pratique}` },
-              { type: 'mrkdwn', text: `*Mobilité:*\n${data.mobilite || '—'}` }
-            ]
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*Domaines:*\n${domaines}`
-            }
-          }
-        ]
+        text: `📋 *Nouveau profil d'expertise vétérinaire reçu*\n\n` +
+              `👤 *${data.prenom} ${data.nom}*\n` +
+              `📧 ${data.email}\n` +
+              `📱 ${data.telephone || 'N/A'}\n` +
+              `📍 ${data.ville || '—'} (${data.cp || '—'})\n` +
+              `💼 Statut: ${data.statut || '—'}\n` +
+              `🐾 Pratique: ${pratique}\n` +
+              `🔬 Domaines: ${domaines}\n` +
+              `🚗 Mobilité: ${data.mobilite || '—'}`
       };
 
       console.log('Message Slack:', JSON.stringify(slackMessage, null, 2));
@@ -894,7 +878,8 @@
         })
         .catch(err => {
           console.error('❌ Erreur Slack:', err);
-          throw err;
+          // Slack est optionnel - ne pas bloquer le formulaire si Slack échoue
+          console.warn('⚠️ Slack n\'a pas reçu les données, mais le formulaire est validé');
         })
       );
     }
