@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Slack - Questionnaire vétérinaires</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    .section {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+    button {
+      background: #0E1F33;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #16304C;
+    }
+    .log {
+      background: #1a1a1a;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 4px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 20px 0;
+    }
+    .success {
+      color: #0f0;
+    }
+    .error {
+      color: #ff4444;
+    }
+    .info {
+      color: #00aaff;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🧪 Test Slack - Questionnaire Vétérinaires</h1>
+
+<div class="section">
+  <h2>Configuration</h2>
+  <p>Webhook URL: <code id="webhookDisplay"></code></p>
+  <p>Query params: <code id="paramsDisplay"></code></p>
+</div>
+
+<div class="section">
+  <h2>Tests</h2>
+  <button onclick="testSimple()">1️⃣ Test simple (curl simulé)</button>
+  <button onclick="testWithFetch()">2️⃣ Test avec fetch</button>
+  <button onclick="testFormData()">3️⃣ Test données du formulaire</button>
+  <button onclick="clearLog()">🗑️ Effacer les logs</button>
+</div>
+
+<div class="section">
+  <h2>Logs</h2>
+  <div class="log" id="logBox"></div>
+</div>
+
+<script>
+const logBox = document.getElementById('logBox');
+
+function log(msg, type = 'info') {
+  const span = document.createElement('div');
+  span.className = type;
+  const time = new Date().toLocaleTimeString();
+  span.innerHTML = `[${time}] ${msg}`;
+  logBox.appendChild(span);
+  logBox.scrollTop = logBox.scrollHeight;
+  console.log(msg);
+}
+
+function clearLog() {
+  logBox.innerHTML = '';
+}
+
+// Configuration
+const params = new URLSearchParams(window.location.search);
+const webhookUrl = params.get('slack_webhook') || '';
+
+document.getElementById('webhookDisplay').textContent = webhookUrl || '(non configuré)';
+document.getElementById('paramsDisplay').textContent = window.location.search || '(aucun)';
+
+if (!webhookUrl) {
+  log('⚠️ WEBHOOK NON CONFIGURÉ !', 'error');
+  log('Utilise le lien avec le paramètre:', 'error');
+  log('?slack_webhook=https://hooks.slack.com/...', 'error');
+}
+
+async function testSimple() {
+  if (!webhookUrl) {
+    log('❌ Webhook URL non configurée !', 'error');
+    return;
+  }
+
+  log('▶️ Test 1 : curl simulé (message simple)', 'info');
+
+  const message = {
+    text: '🧪 Test simple du webhook Slack'
+  };
+
+  log('Message: ' + JSON.stringify(message), 'info');
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(message)
+    });
+
+    log(`✅ Réponse HTTP ${response.status}`, 'success');
+    const text = await response.text();
+    log(`Réponse: ${text}`, text === 'ok' ? 'success' : 'error');
+  } catch (err) {
+    log(`❌ Erreur: ${err.message}`, 'error');
+  }
+}
+
+async function testWithFetch() {
+  if (!webhookUrl) {
+    log('❌ Webhook URL non configurée !', 'error');
+    return;
+  }
+
+  log('▶️ Test 2 : fetch complet', 'info');
+
+  const message = {
+    text: `📋 *Test du formulaire*\n\n👤 *Anis Bensoltane*\n📧 anis@hackyourcare.com\n📱 06 12 34 56 78\n📍 Rennes (35000)\n💼 Statut: Libéral\n🐾 Pratique: Canine\n🔬 Domaines: Chirurgie`
+  };
+
+  log('Envoi à: ' + webhookUrl, 'info');
+  log('Message: ' + JSON.stringify(message, null, 2), 'info');
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(message)
+    });
+
+    log(`✅ Réponse HTTP ${response.status}`, 'success');
+    const text = await response.text();
+    log(`Réponse: ${text}`, text === 'ok' ? 'success' : 'error');
+  } catch (err) {
+    log(`❌ Erreur fetch: ${err.message}`, 'error');
+  }
+}
+
+async function testFormData() {
+  if (!webhookUrl) {
+    log('❌ Webhook URL non configurée !', 'error');
+    return;
+  }
+
+  log('▶️ Test 3 : simulation données formulaire', 'info');
+
+  // Simulation des données d'un formulaire
+  const data = {
+    prenom: 'Anis',
+    nom: 'Bensoltane',
+    email: 'anis@hackyourcare.com',
+    telephone: '06 12 34 56 78',
+    ville: 'Rennes',
+    cp: '35000',
+    statut: 'Libéral',
+    pratique: ['Canine', 'Rurale'],
+    domaines: ['Chirurgie', 'Cardiologie'],
+    mobilite: 'Oui, à l\'échelle régionale',
+    _horodatage: new Date().toISOString()
+  };
+
+  const pratique = Array.isArray(data.pratique) ? data.pratique.join(', ') : (data.pratique || '—');
+  const domaines = Array.isArray(data.domaines) ? data.domaines.join(', ') : (data.domaines || '—');
+
+  const message = {
+    text: `📋 *Nouveau profil d'expertise vétérinaire reçu*\n\n` +
+          `👤 *${data.prenom} ${data.nom}*\n` +
+          `📧 ${data.email}\n` +
+          `📱 ${data.telephone || 'N/A'}\n` +
+          `📍 ${data.ville || '—'} (${data.cp || '—'})\n` +
+          `💼 Statut: ${data.statut || '—'}\n` +
+          `🐾 Pratique: ${pratique}\n` +
+          `🔬 Domaines: ${domaines}\n` +
+          `🚗 Mobilité: ${data.mobilite || '—'}`
+  };
+
+  log('Données simulées: ' + JSON.stringify(data, null, 2), 'info');
+  log('Message formaté: ' + message.text, 'info');
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(message)
+    });
+
+    log(`✅ Réponse HTTP ${response.status}`, 'success');
+    const text = await response.text();
+    log(`Réponse: ${text}`, text === 'ok' ? 'success' : 'error');
+  } catch (err) {
+    log(`❌ Erreur: ${err.message}`, 'error');
+  }
+}
+
+// Auto-test au chargement
+window.addEventListener('load', () => {
+  log('Page chargée ✓', 'success');
+  log('Config chargée:', 'info');
+  if (webhookUrl) {
+    log('✅ Webhook URL trouvée', 'success');
+  } else {
+    log('⚠️ Pas de webhook URL', 'error');
+  }
+});
+</script>
+
+</body>
+</html>
