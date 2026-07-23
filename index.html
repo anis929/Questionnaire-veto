@@ -840,38 +840,41 @@
 
     // Envoi vers Slack si webhook configuré
     if(SLACK_WEBHOOK_URL){
-      console.log('Envoi à Slack...');
+      console.log('Envoi à Slack...', SLACK_WEBHOOK_URL);
+
+      const pratique = Array.isArray(data.pratique) ? data.pratique.join(', ') : (data.pratique || '—');
+      const domaines = Array.isArray(data.domaines) ? data.domaines.join(', ') : (data.domaines || '—');
+
       const slackMessage = {
-        text: '📋 Nouveau profil d\'expertise vétérinaire reçu',
+        text: `📋 Nouveau profil d'expertise : ${data.prenom} ${data.nom}`,
         blocks: [
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `*Nouveau profil d\'expertise reçu*\n*${data.prenom} ${data.nom}* (${data.email})`
+              text: `*Nouveau profil d'expertise vétérinaire*\n\n*${data.prenom} ${data.nom}*\n${data.email} | ${data.telephone || 'N/A'}`
             }
           },
           {
             type: 'section',
             fields: [
-              { type: 'mrkdwn', text: `*Téléphone:*\n${data.telephone || '—'}` },
               { type: 'mrkdwn', text: `*Ville:*\n${data.ville || '—'}` },
-              { type: 'mrkdwn', text: `*Pratique:*\n${Array.isArray(data.pratique) ? data.pratique.join(', ') : data.pratique || '—'}` },
-              { type: 'mrkdwn', text: `*Statut:*\n${data.statut || '—'}` }
+              { type: 'mrkdwn', text: `*Statut:*\n${data.statut || '—'}` },
+              { type: 'mrkdwn', text: `*Pratique:*\n${pratique}` },
+              { type: 'mrkdwn', text: `*Mobilité:*\n${data.mobilite || '—'}` }
             ]
-          },
-          {
-            type: 'divider'
           },
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `_Envoyé le ${new Date(data._horodatage).toLocaleString('fr-FR')}_`
+              text: `*Domaines:*\n${domaines}`
             }
           }
         ]
       };
+
+      console.log('Message Slack:', JSON.stringify(slackMessage, null, 2));
 
       promises.push(
         fetch(SLACK_WEBHOOK_URL, {
@@ -880,11 +883,17 @@
           body: JSON.stringify(slackMessage)
         })
         .then(resp => {
-          console.log('Réponse Slack:', resp.status);
+          console.log('✅ Réponse Slack:', resp.status, resp.statusText);
+          if(!resp.ok) {
+            return resp.text().then(text => {
+              console.error('Erreur Slack (texte):', text);
+              throw new Error(`Slack error: ${resp.status} ${text}`);
+            });
+          }
           return resp;
         })
         .catch(err => {
-          console.error('Erreur Slack:', err);
+          console.error('❌ Erreur Slack:', err);
           throw err;
         })
       );
