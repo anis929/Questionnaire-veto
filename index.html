@@ -827,6 +827,10 @@
     // Envoi réel vers la destination configurée (FORM_ENDPOINT)
     btn.disabled = true;
     btn.textContent = 'Envoi en cours…';
+
+    console.log('📤 Envoi des données vers:', FORM_ENDPOINT);
+    console.log('📋 Données:', data);
+
     // Google Apps Script requires no-cors mode (opaque response)
     fetch(FORM_ENDPOINT, {
       method:'POST',
@@ -834,10 +838,15 @@
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify(data)
     })
-    .then(function(){
+    .then(function(response){
+      console.log('✅ Requête envoyée avec succès');
+      console.log('📊 Status:', response.status, response.statusText);
+      console.log('⚠️  Note: Avec no-cors, on ne peut pas lire la réponse du serveur.');
+      console.log('💡 Vérifiez votre Google Sheet pour confirmer que les données sont arrivées.');
       showDone();
     })
-    .catch(function(){
+    .catch(function(error){
+      console.error('❌ Erreur lors de l\'envoi:', error);
       btn.disabled = false;
       btn.textContent = 'Envoyer mes informations';
       formError.textContent = "L'envoi a échoué. Vérifiez votre connexion et réessayez.";
