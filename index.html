@@ -772,6 +772,77 @@
   form.addEventListener('input', updateProgress);
   updateProgress();
 
+  /* =================================================================
+     SCHÉMA D'EXPORT — ordre et libellé des colonnes du Google Sheet.
+     Chaque envoi contient TOUJOURS ces champs, dans cet ordre, même
+     lorsqu'ils sont vides ou non cochés : sans cela les cases à cocher
+     non cochées et les groupes vides sont absents du FormData, les
+     colonnes se décalent d'une réponse à l'autre et le Sheet n'est
+     rempli que partiellement.
+  ================================================================= */
+  const CHAMPS = [
+    ['civilite',        'Civilité'],
+    ['prenom',          'Prénom'],
+    ['nom',             'Nom'],
+    ['email',           'Email professionnel'],
+    ['telephone',       'Téléphone'],
+    ['canal',           'Canal de contact préféré'],
+    ['linkedin',        'Profil LinkedIn'],
+    ['numOrdre',        'N° Ordre'],
+    ['statut',          'Statut d’exercice'],
+    ['siret',           'SIRET'],
+    ['anneeDiplome',    'Année de diplôme'],
+    ['ecole',           'École vétérinaire'],
+    ['ville',           'Ville d’exercice'],
+    ['cp',              'Code postal'],
+    ['pays',            'Pays'],
+    ['mobilite',        'Mobilité présentiel'],
+    ['distanciel',      'Disponible en distanciel'],
+    ['pratique',        'Type de pratique'],
+    ['domaines',        'Domaines d’intérêt'],
+    ['desv',            'DESV'],
+    ['college',         'Collège européen'],
+    ['ceav',            'CEAV'],
+    ['langues',         'Langues de travail'],
+    ['competences',     'Compétences transversales'],
+    ['ia',              'Appétence IA / numérique'],
+    ['missions',        'Missions souhaitées'],
+    ['tempsDispo',      'Temps mobilisable / mois'],
+    ['facturation',     'Peut facturer'],
+    ['nomPublic',       'Nom public'],
+    ['rgpd',            'Consentement RGPD'],
+    ['consentMissions', 'Accepte les propositions de mission'],
+    ['consentAnnuaire', 'Accepte l’annuaire d’experts']
+  ];
+  // Champs à valeurs multiples (cases à cocher groupées)
+  const MULTI = ['pratique','domaines','langues','competences','missions'];
+  // Cases à cocher uniques → toujours écrites en Oui / Non
+  const CASES = ['rgpd','consentMissions','consentAnnuaire'];
+
+  function collecterReponses(){
+    const fd = new FormData(form);
+    const data = {};
+    CHAMPS.forEach(function(c){
+      const nom = c[0];
+      let v;
+      if(MULTI.indexOf(nom) !== -1){
+        v = fd.getAll(nom).join(' | ');           // jamais d'Array : une cellule = une chaîne
+      } else if(CASES.indexOf(nom) !== -1){
+        v = fd.get(nom) !== null ? 'Oui' : 'Non'; // une case décochée reste une réponse
+      } else {
+        const brut = fd.get(nom);
+        v = (brut === null || brut === undefined) ? '' : String(brut).trim();
+      }
+      data[nom] = v;
+    });
+    data._horodatage = new Date().toISOString();
+    data._id = 'hyc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+    // Le script Google construit les en-têtes du Sheet à partir de ces deux clés.
+    data._ordre = CHAMPS.map(function(c){ return c[0]; }).join(',');
+    data._libelles = JSON.stringify(CHAMPS.reduce(function(acc,c){ acc[c[0]] = c[1]; return acc; }, {}));
+    return data;
+  }
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
     let ok = true;
@@ -800,14 +871,8 @@
     }
     formError.classList.remove('show');
 
-    // Collect data
-    const data = {};
-    const fd = new FormData(form);
-    for(const [k,v] of fd.entries()){
-      if(data[k]!==undefined){ data[k] = [].concat(data[k], v); }
-      else { data[k] = v; }
-    }
-    data._horodatage = new Date().toISOString();
+    // Collecte : schéma figé, toutes les colonnes à chaque envoi
+    const data = collecterReponses();
     lastData = data;
 
     const btn = form.querySelector('button.submit');
@@ -827,12 +892,14 @@
     // Envoi réel vers la destination configurée (FORM_ENDPOINT)
     btn.disabled = true;
     btn.textContent = 'Envoi en cours…';
-    // Google Apps Script requires no-cors mode (opaque response)
+    /* Le corps est envoyé en application/x-www-form-urlencoded : c'est le seul
+       type autorisé en mode no-cors (un en-tête Content-Type: application/json
+       y est silencieusement supprimé par le navigateur). Apps Script reçoit
+       ainsi chaque champ dans e.parameter, sans avoir à parser le corps. */
     fetch(FORM_ENDPOINT, {
       method:'POST',
       mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(data)
+      body: new URLSearchParams(data)
     })
     .then(function(){
       showDone();
